@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌸 Duyên Dung - Trò Chơi Xưởng Hoa Nghệ Thuật</title>
+  <style>
+    :root {
+      --pink-pastel: #FFF0F5;
+      --pink-accent: #FFB7C5;
+      --cream: #FFFDD0;
+      --milk-brown: #C39B7A;
+      --dark-brown: #5C4033;
+      --white: #FFFFFF;
+      --gray: #e0e0e0;
+      --gold: #FFD700;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 100%);
+      color: var(--dark-brown);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--white);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(195, 155, 122, 0.3);
+      overflow: hidden;
+      border: 4px solid var(--pink-accent);
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen {
+      display: none;
+      padding: 25px;
+      animation: fadeIn 0.4s ease;
+      min-height: 500px;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      color: var(--dark-brown);
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 28px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: var(--milk-brown);
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--pink-accent), #FF9FB2);
+      color: var(--dark-brown);
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      font-size: 15px;
+      margin-top: 5px;
+      box-shadow: 0 4px 8px rgba(195, 155, 122, 0.2);
+    }
+
+    button:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--milk-brown), #B8956A);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(195, 155, 122, 0.4);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: var(--gray);
+      color: #a0a0a0;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .status-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: linear-gradient(135deg, var(--pink-pastel), var(--cream));
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      border: 2px solid var(--pink-accent);
+    }
+
+    .status-item {
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .workshop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .bouquet-canvas {
+      background: linear-gradient(135deg, #faf6f0, #f5f0eb);
+      border: 3px dashed var(--pink-accent);
+      border-radius: 16px;
+      height: 350px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
+      transition: background 0.3s;
+    }
+
+    .bouquet-canvas.dragover {
+      background: linear-gradient(135deg, #fff5f0, #ffe0e0);
+      border-color: var(--milk-brown);
+    }
+
+    .canvas-wrap {
+      position: absolute;
+      width: 85%;
+      height: 85%;
+      border-radius: 50% 50% 20% 20%;
+      opacity: 0.4;
+      bottom: 10px;
+      transition: background 0.3s, opacity 0.3s;
+    }
+
+    .canvas-ribbon {
+      position: absolute;
+      bottom: 45px;
+      font-size: 32px;
+      z-index: 10;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .canvas-card {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 20px;
+      background: white;
+      padding: 4px 8px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      display: none;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .stem-on-bouquet {
+      position: absolute;
+      font-size: 32px;
+      cursor: grab;
+      user-select: none;
+      z-index: 5;
+      transition: transform 0.2s;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+      animation: flowerFall 0.5s ease;
+    }
+
+    .stem-on-bouquet:hover {
+      transform: scale(1.15);
+    }
+
+    .stem-on-bouquet:active {
+      cursor: grabbing;
+      z-index: 20;
+    }
+
+    @keyframes flowerFall {
+      0% { opacity: 0; transform: translateY(-20px) scale(0.8); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .ingredients-shelf {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .ingredients-shelf::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .ingredients-shelf::-webkit-scrollbar-track {
+      background: var(--pink-pastel);
+      border-radius: 10px;
+    }
+
+    .ingredients-shelf::-webkit-scrollbar-thumb {
+      background: var(--pink-accent);
+      border-radius: 10px;
+    }
+
+    .shelf-section {
+      background: linear-gradient(135deg, var(--pink-pastel), #FFE4E1);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--pink-accent);
+    }
+
+    .shelf-section h3 {
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: var(--dark-brown);
+      border-bottom: 2px solid var(--pink-accent);
+      padding-bottom: 5px;
+    }
+
+    .item-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      border: 1px solid var(--pink-accent);
+      cursor: move;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .item-node:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background: #fff5f0;
+    }
+
+    .item-node button {
+      width: auto;
+      padding: 4px 10px;
+      font-size: 11px;
+      margin: 0;
+      background: var(--pink-accent);
+    }
+
+    .order-box {
+      background: linear-gradient(135deg, #fffcf7, #fff9f0);
+      border: 2px solid var(--milk-brown);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .order-demand {
+      margin-top: 8px;
+      color: #5C4033;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid var(--milk-brown);
+      margin-top: 8px;
+      font-size: 14px;
+      transition: border 0.3s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--pink-accent);
+      box-shadow: 0 0 0 3px rgba(255, 183, 197, 0.2);
+    }
+
+    .intro-section {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .intro-section > div:first-child {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .level-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), #FFC700);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin: 5px;
+      box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+    }
+
+    .score-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #FF6B9D, #FF85B3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      margin: 5px;
+      box-shadow: 0 4px 8px rgba(255, 107, 157, 0.3);
+    }
+
+    .achievement-popup {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, var(--gold), #FFC700);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      animation: slideInRight 0.5s ease;
+      z-index: 1000;
+      font-weight: bold;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .hidden { display: none !important; }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pink-accent), var(--milk-brown));
+      transition: width 0.3s ease;
+    }
+
+    .customer-name {
+      color: var(--milk-brown);
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .hint-text {
+      color: #e67e22;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- SCREEN 1: INTRO -->
+  <div id="screen-intro" class="screen active">
+    <div class="intro-section">
+      <div>💐</div>
+      <h1>DUYÊN DUNG</h1>
+      <h2>Xưởng Hoa Nghệ Thuật</h2>
+      <p style="font-size: 14px; margin: 20px 0; line-height: 1.6;">
+        Trải nghiệm tự tay thiết kế, phối màu, và cắm hoa cho từng vị khách đặc biệt.
+        <br><br>
+        🎨 <strong>Kéo thả hoa vào canvas</strong><br>
+        🎵 <strong>Âm thanh sống động</strong><br>
+        ⭐ <strong>50 cấp độ để chinh phục</strong><br>
+        💰 <strong>Kiếm tiền và nâng cấp cửa hàng</strong>
+      </p>
+      <button onclick="changeScreen('screen-init')" style="background: linear-gradient(135deg, #FF6B9D, #FF85B3); color: white; font-size: 16px;">
+        🌸 Bắt Đầu Trò Chơi ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: SETUP -->
+  <div id="screen-init" class="screen">
+    <h1>⚙️ Đăng Ký Thương Hiệu</h1>
+    <div class="input-group" style="margin-bottom: 15px;">
+      <label style="font-size: 12px; font-weight: bold; display: block;">Tên Của Bạn</label>
+      <input type="text" id="inp-owner" value="Duyên Dung" maxlength="20">
+    </div>
+    <div class="input-group" style="margin-bottom: 20px;">
+      <label style="font-size: 12px; font-weight: bold; display: block;">Tên Tiệm Hoa</label>
+      <input type="text" id="inp-shop" value="Tiệm Hoa Nhỏ" maxlength="25">
+    </div>
+    <button onclick="initShop()" style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; font-size: 16px;">
+      ✨ Mở Cửa Tiệm Ngay
+    </button>
+  </div>
+
+  <!-- SCREEN 3: DASHBOARD/INVENTORY -->
+  <div id="screen-dashboard" class="screen">
+    <div class="status-bar">
+      <div class="status-item">💰 <span id="dash-money">600</span>đ</div>
+      <div class="status-item">⭐ Cấp <span id="dash-level">1</span>/50</div>
+      <div class="status-item">🏆 Điểm <span id="dash-score">0</span></div>
+      <div class="status-item">📦 <span id="dash-inv-count">0</span>/50</div>
+    </div>
+
+    <h1 id="dash-title" style="font-size: 22px; margin-bottom: 5px;">Tiệm Hoa Nhỏ</h1>
+    <p style="text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;">
+      👨‍💼 Chủ tiệp: <span id="dash-owner">Duyên Dung</span>
+    </p>
+
+    <div style="background: linear-gradient(135deg, var(--pink-pastel), var(--cream)); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--pink-accent);">
+      <p style="font-size: 12px; font-weight: bold; color: var(--dark-brown); margin-bottom: 8px;">📊 Tiến Độ Cấp Độ</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="level-progress" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <p style="font-size: 13px; font-weight: bold; text-align: center; margin-bottom: 12px;">🌺 Nhà Cung Cấp Hôm Nay:</p>
+
+    <div id="wholesale-market" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;"></div>
+
+    <p id="target-alert" style="color: #c0392b; font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 10px;">
+      Chỉ tiêu: Nhập tối thiểu 3 cành hoa để bắt đầu!
+    </p>
+    <button id="btn-to-workshop" onclick="goToWorkshop()" disabled style="font-size: 14px;">
+      🎨 Vào Xưởng Thiết Kế
+    </button>
+  </div>
+
+  <!-- SCREEN 4: WORKSHOP -->
+  <div id="screen-workshop" class="screen">
+    <div class="status-bar">
+      <div class="status-item">💰 <span id="work-money">600</span>đ</div>
+      <div class="status-item">💐 <span id="work-flower-count">0</span> cành</div>
+      <div class="status-item">✨ <span id="work-est-price">0</span>đ</div>
+      <div class="status-item">⭐ Cấp <span id="work-level">1</span>/50</div>
+    </div>
+
+    <div class="order-box">
+      <strong>📋 Yêu Cầu Từ Khách:</strong>
+      <div class="customer-name" id="customer-name"></div>
+      <div class="order-demand" id="order-demand">Đang tải đơn hàng...</div>
+      <div class="hint-text" id="order-hint"></div>
+    </div>
+
+    <div class="workshop-grid">
+      <div>
+        <span style="font-size: 11px; font-weight: bold; color: var(--milk-brown); display: block; margin-bottom: 8px;">🎨 Canvas Thiết Kế:</span>
+        <div class="bouquet-canvas" id="flower-canvas" ondrop="handleCanvasDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+          <div class="canvas-wrap" id="visual-wrap" style="background: #ffb7c5;"></div>
+          <div class="canvas-ribbon" id="visual-ribbon">🎀</div>
+          <div class="canvas-card" id="visual-card">💌</div>
+        </div>
+        <button style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 8px; font-size: 12px; margin-top: 8px;" onclick="resetBouquet()">
+          🔄 Xóa & Làm Lại
+        </button>
+      </div>
+
+      <div class="ingredients-shelf">
+        <div class="shelf-section">
+          <h3>🌹 Hoa (Kéo vào canvas)</h3>
+          <div id="shelf-flowers"></div>
+        </div>
+
+        <div class="shelf-section">
+          <h3>📄 Giấy Gói</h3>
+          <div id="shelf-wraps"></div>
+        </div>
+
+        <div class="shelf-section">
+          <h3>🎀 Phụ Kiện</h3>
+          <div id="shelf-ribbons"></div>
+        </div>
+
+        <div class="shelf-section">
+          <h3>💌 Thiệp Chúc Mừng</h3>
+          <div id="shelf-cards"></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="btn-complete-order" style="background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; margin-top: 15px; font-size: 16px;" onclick="submitBouquet()">
+      ✨ Hoàn Thành & Giao Khách
+    </button>
+    <button style="background: #eee; color: #555; font-size: 12px; padding: 8px; margin-top: 8px;" onclick="changeScreen('screen-dashboard')">
+      ⬅ Quay Lại Kho
+    </button>
+  </div>
+
+  <!-- SCREEN 5: LEVEL UP -->
+  <div id="screen-levelup" class="screen" style="text-align: center; padding: 60px 20px;">
+    <div style="font-size: 80px; animation: bounce 0.6s ease;">🎉</div>
+    <h1 style="color: var(--gold); font-size: 32px;">LÊN CẤP!</h1>
+    <p id="levelup-text" style="font-size: 18px; margin: 20px 0; font-weight: bold;"></p>
+    <p id="levelup-reward" style="font-size: 14px; color: #e67e22; margin: 15px 0;"></p>
+    <button onclick="changeScreen('screen-dashboard')" style="background: linear-gradient(135deg, var(--gold), #FFC700); color: white; margin-top: 20px; font-size: 16px;">
+      Tiếp Tục 🚀
+    </button>
+  </div>
+</div>
+
+<!-- Achievement Popup -->
+<div id="achievement-popup" class="achievement-popup hidden"></div>
+
+<script>
+  // ============ GAME DATA ============
+  let gameData = {
+    money: 600,
+    level: 1,
+    score: 0,
+    owner: "Duyên Dung",
+    shopName: "Tiệm Hoa Nhỏ",
+    inventory: { rose_red: 2, tulip_pink: 1, sun_yellow: 0 },
+    ordersCompleted: 0,
+    lastLevelUpScore: 0
+  };
+
+  const dbFlowers = {
+    rose_red: { name: "🌹 Hồng Nhung Đỏ", icon: "🌹", cost: 25, val: 50 },
+    tulip_pink: { name: "🌷 Tulip Hồng Pastel", icon: "🌷", cost: 40, val: 85 },
+    sun_yellow: { name: "🌻 Hướng Dương Vàng", icon: "🌻", cost: 30, val: 65 },
+    lily_white: { name: "⚪ Loa Kèn Trắng", icon: "⚪", cost: 50, val: 100 },
+    orchid_purple: { name: "💜 Lan Tím Sang Trọng", icon: "💜", cost: 60, val: 120 }
+  };
+
+  const dbWraps = [
+    { id: "wrap-pink", name: "Giấy lụa Hồng", color: "#FFB7C5", price: 10 },
+    { id: "wrap-vintage", name: "Kraft Cổ Điển", color: "#D2B48C", price: 15 },
+    { id: "wrap-luxury", name: "Đen Sang Trọng", color: "#333333", price: 25 },
+    { id: "wrap-gold", name: "Vàng Ánh Huy Hoàng", color: "#FFD700", price: 35 }
+  ];
+
+  const dbRibbons = [
+    { id: "rib-ribbon", name: "Nơ Satin Hồng", icon: "🎀", price: 5 },
+    { id: "rib-rope", name: "Dây Thừng Thô", icon: "🎗️", price: 5 },
+    { id: "rib-gold", name: "Nơ Sợi Vàng Chỉ", icon: "👑", price: 15 },
+    { id: "rib-silver", name: "Nơ Bạc Lấp Lánh", icon: "🥈", price: 15 }
+  ];
+
+  const dbCards = [
+    { id: "card-love", name: "Thiệp Tình Yêu", icon: "💌", price: 5 },
+    { id: "card-birthday", name: "Thiệp Sinh Nhật", icon: "🎂", price: 10 },
+    { id: "card-congratulations", name: "Thiệp Chúc Mừng", icon: "🎊", price: 10 }
+  ];
+
+  const customerNames = [
+    "Anh Hoa", "Chị Mai", "Bạn Đạo", "Cô Linh", "Anh Minh",
+    "Chị Oanh", "Bạn Tuấn", "Cô Hương", "Anh Hùng", "Chị Loan"
+  ];
+
+  let currentBouquet = {
+    flowers: [],
+    wrap: dbWraps[0],
+    ribbon: dbRibbons[0],
+    card: null
+  };
+
+  let activeOrder = {};
+  let draggedFlower = null;
+
+  const ordersPool = [
+    { desc: "Tặng người yêu", customerName: "Anh Hoa", matchId: "rose_red", minQty: 2, bonus: 30 },
+    { desc: "Chúc mừng tốt nghiệp", customerName: "Chị Mai", matchId: "sun_yellow", minQty: 2, bonus: 35 },
+    { desc: "Tặng sinh nhật mẹ", customerName: "Cô Linh", matchId: "rose_red", minQty: 3, bonus: 40 },
+    { desc: "Cầu hôn", customerName: "Anh Minh", matchId: "tulip_pink", minQty: 3, bonus: 50 },
+    { desc: "Đám cưới", customerName: "Chị Oanh", matchId: "lily_white", minQty: 4, bonus: 60 },
+    { desc: "Tuyên bố tình yêu", customerName: "Bạn Đạo", matchId: "orchid_purple", minQty: 2, bonus: 45 },
+    { desc: "Tặng mầm non", customerName: "Cô Hương", matchId: "sun_yellow", minQty: 1, bonus: 25 },
+    { desc: "Chia buồn", customerName: "Anh Hùng", matchId: "lily_white", minQty: 2, bonus: 35 }
+  ];
+
+  // ============ SOUND EFFECTS ============
+  function playSound(type) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    switch(type) {
+      case 'click':
+        oscillator.frequency.value = 600;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+        break;
+      case 'success':
+        oscillator.frequency.value = 800;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+        break;
+      case 'levelup':
+        oscillator.frequency.value = 1000;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+        break;
+    }
+  }
+
+  // ============ GAME FUNCTIONS ============
+  window.onload = function () {
+    if (localStorage.getItem('duyendung_game_save')) {
+      gameData = JSON.parse(localStorage.getItem('duyendung_game_save'));
+    }
+    updateAllInterfaces();
+  };
+
+  function save() {
+    localStorage.setItem('duyendung_game_save', JSON.stringify(gameData));
+  }
+
+  function changeScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    playSound('click');
+  }
+
+  function initShop() {
+    gameData.owner = document.getElementById('inp-owner').value;
+    gameData.shopName = document.getElementById('inp-shop').value;
+    updateAllInterfaces();
+    changeScreen('screen-dashboard');
+    save();
+  }
+
+  function updateAllInterfaces() {
+    document.getElementById('dash-money').innerText = gameData.money;
+    document.getElementById('dash-level').innerText = gameData.level;
+    document.getElementById('dash-score').innerText = gameData.score;
+    document.getElementById('dash-title').innerText = gameData.shopName;
+    document.getElementById('dash-owner').innerText = gameData.owner;
+    document.getElementById('work-money').innerText = gameData.money;
+    document.getElementById('work-level').innerText = gameData.level;
+
+    const totalInv = Object.values(gameData.inventory).reduce((a, b) => a + b, 0);
+    document.getElementById('dash-inv-count').innerText = totalInv;
+
+    const levelProgress = ((gameData.score - gameData.lastLevelUpScore) / (gameData.level * 100)) * 100;
+    document.getElementById('level-progress').style.width = Math.min(levelProgress, 100) + '%';
+
+    const btnWorkshop = document.getElementById('btn-to-workshop');
+    const targetAlert = document.getElementById('target-alert');
+
+    if (totalInv >= 3) {
+      btnWorkshop.disabled = false;
+      btnWorkshop.innerText = "🎨 Vào Xưởng Thiết Kế Ngay";
+      btnWorkshop.style.background = "linear-gradient(135deg, #2ecc71, #27ae60)";
+      btnWorkshop.style.color = "white";
+      targetAlert.style.color = "#2ecc71";
+      targetAlert.innerText = "✓ Đã sẵn sàng! Chọn 1 đơn hàng để bắt đầu";
+    } else {
+      btnWorkshop.disabled = true;
+      targetAlert.style.color = "#c0392b";
+      targetAlert.innerText = `⚠️ Nhập thêm ${3 - totalInv} cành hoa để bắt đầu!`;
+    }
+
+    renderWholesaleMarket();
+  }
+
+  function renderWholesaleMarket() {
+    const div = document.getElementById('wholesale-market');
+    div.innerHTML = '';
+
+    for (let key in dbFlowers) {
+      let fl = dbFlowers[key];
+      div.innerHTML += `
+        <div class="item-node">
+          <div>${fl.icon} <strong>${fl.name}</strong> (${gameData.inventory[key] || 0} cành)</div>
+          <div>
+            <span style="color:#e67e22; font-weight:bold;">${fl.cost}đ</span>
+            <button onclick="buyBulk('${key}', ${fl.cost})">Mua</button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function buyBulk(key, cost) {
+    if (gameData.money >= cost) {
+      gameData.money -= cost;
+      gameData.inventory[key] = (gameData.inventory[key] || 0) + 1;
+      playSound('click');
+      updateAllInterfaces();
+      save();
+    } else {
+      alert("💸 Tiền không đủ!");
+      playSound('click');
+    }
+  }
+
+  function goToWorkshop() {
+    changeScreen('screen-workshop');
+    activeOrder = ordersPool[Math.floor(Math.random() * ordersPool.length)];
+    document.getElementById('customer-name').innerText = `👤 ${activeOrder.customerName}`;
+    document.getElementById('order-demand').innerText = activeOrder.desc;
+    document.getElementById('order-hint').innerText = `💡 Gợi ý: Cần ${activeOrder.minQty}+ ${dbFlowers[activeOrder.matchId].name}`;
+    resetBouquet();
+    renderWorkshopComponents();
+  }
+
+  function renderWorkshopComponents() {
+    const shelfFlowers = document.getElementById('shelf-flowers');
+    shelfFlowers.innerHTML = '';
+
+    for (let key in gameData.inventory) {
+      if (gameData.inventory[key] > 0) {
+        let fl = dbFlowers[key];
+        shelfFlowers.innerHTML += `
+          <div class="item-node" draggable="true" ondragstart="handleFlowerDragStart(event, '${key}')">
+            <div>${fl.icon} x${gameData.inventory[key]}</div>
+            <button onclick="addFlowerToBouquet('${key}')">+ Thêm</button>
+          </div>
+        `;
+      }
+    }
+
+    const shelfWraps = document.getElementById('shelf-wraps');
+    shelfWraps.innerHTML = '';
+
+    dbWraps.forEach(w => {
+      shelfWraps.innerHTML += `
+        <div class="item-node">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:16px;height:16px;background:${w.color};border-radius:4px;border:1px solid #999;"></div>
+            ${w.name}
+          </div>
+          <button onclick="selectWrap('${w.id}')">Chọn</button>
+        </div>
+      `;
+    });
+
+    const shelfRibbons = document.getElementById('shelf-ribbons');
+    shelfRibbons.innerHTML = '';
+
+    dbRibbons.forEach(r => {
+      shelfRibbons.innerHTML += `
+        <div class="item-node">
+          <div>${r.icon} ${r.name}</div>
+          <button onclick="selectRibbon('${r.id}')">Đính</button>
+        </div>
+      `;
+    });
+
+    const shelfCards = document.getElementById('shelf-cards');
+    shelfCards.innerHTML = '';
+
+    dbCards.forEach(c => {
+      shelfCards.innerHTML += `
+        <div class="item-node">
+          <div>${c.icon} ${c.name}</div>
+          <button onclick="selectCard('${c.id}')">Thêm</button>
+        </div>
+      `;
+    });
+  }
+
+  function handleFlowerDragStart(event, key) {
+    draggedFlower = key;
+    event.dataTransfer.effectAllowed = "copy";
+    playSound('click');
+  }
+
+  function handleDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    document.getElementById('flower-canvas').classList.add('dragover');
+  }
+
+  function handleDragLeave(event) {
+    document.getElementById('flower-canvas').classList.remove('dragover');
+  }
+
+  function handleCanvasDrop(event) {
+    event.preventDefault();
+    document.getElementById('flower-canvas').classList.remove('dragover');
+    if (draggedFlower) {
+      addFlowerToBouquet(draggedFlower);
+      draggedFlower = null;
+    }
+  }
+
+  function addFlowerToBouquet(key) {
+    if (gameData.inventory[key] > 0) {
+      gameData.inventory[key]--;
+      currentBouquet.flowers.push(key);
+
+      const canvas = document.getElementById('flower-canvas');
+      const el = document.createElement('div');
+      el.className = 'stem-on-bouquet';
+      el.innerText = dbFlowers[key].icon;
+      el.draggable = true;
+
+      const posX = Math.floor(Math.random() * 100) + 50;
+      const posY = Math.floor(Math.random() * 120) + 50;
+
+      el.style.left = posX + 'px';
+      el.style.top = posY + 'px';
+      el.style.transform = `rotate(${Math.floor(Math.random() * 30) - 15}deg)`;
+
+      canvas.appendChild(el);
+
+      calculateEstimatedPrice();
+      renderWorkshopComponents();
+      playSound('click');
+    }
+  }
+
+  function selectWrap(id) {
+    let w = dbWraps.find(x => x.id === id);
+    currentBouquet.wrap = w;
+    document.getElementById('visual-wrap').style.background = w.color;
+    document.getElementById('visual-wrap').style.opacity = "0.7";
+    calculateEstimatedPrice();
+    playSound('click');
+  }
+
+  function selectRibbon(id) {
+    let r = dbRibbons.find(x => x.id === id);
+    currentBouquet.ribbon = r;
+    document.getElementById('visual-ribbon').innerText = r.icon;
+    calculateEstimatedPrice();
+    playSound('click');
+  }
+
+  function selectCard(id) {
+    let c = dbCards.find(x => x.id === id);
+    currentBouquet.card = c;
+    const cEl = document.getElementById('visual-card');
+    cEl.innerText = c.icon;
+    cEl.style.display = 'block';
+    calculateEstimatedPrice();
+    playSound('click');
+  }
+
+  function calculateEstimatedPrice() {
+    let totalVal = 0;
+
+    currentBouquet.flowers.forEach(key => {
+      totalVal += dbFlowers[key].val;
+    });
+
+    totalVal += currentBouquet.wrap.price;
+
+    if (currentBouquet.ribbon) totalVal += currentBouquet.ribbon.price;
+    if (currentBouquet.card) totalVal += currentBouquet.card.price;
+
+    document.getElementById('work-flower-count').innerText = currentBouquet.flowers.length;
+    document.getElementById('work-est-price').innerText = totalVal;
+    return totalVal;
+  }
+
+  function resetBouquet() {
+    currentBouquet.flowers.forEach(key => {
+      gameData.inventory[key]++;
+    });
+
+    currentBouquet.flowers = [];
+    currentBouquet.card = null;
+    currentBouquet.wrap = dbWraps[0];
+    currentBouquet.ribbon = dbRibbons[0];
+
+    document.getElementById('visual-wrap').style.background = dbWraps[0].color;
+    document.getElementById('visual-ribbon').innerText = '🎀';
+    document.getElementById('visual-card').style.display = 'none';
+
+    document.querySelectorAll('.stem-on-bouquet').forEach(el => el.remove());
+    calculateEstimatedPrice();
+    renderWorkshopComponents();
+    playSound('click');
+  }
+
+  function submitBouquet() {
+    if (currentBouquet.flowers.length === 0) {
+      alert("🌸 Bạn chưa cắm hoa vào bó!");
+      return;
+    }
+
+    const targetCount = currentBouquet.flowers.filter(id => id === activeOrder.matchId).length;
+    const baseIncome = calculateEstimatedPrice();
+    let bonus = 0;
+    let evaluationText = "";
+
+    if (targetCount >= activeOrder.minQty) {
+      bonus = Math.round(baseIncome * (activeOrder.bonus / 100));
+      evaluationText = `⭐⭐⭐⭐⭐ ${activeOrder.customerName} rất vui lòng! +${bonus}đ bonus!`;
+      playSound('success');
+    } else {
+      evaluationText = `🌸 ${activeOrder.customerName} tạm ưng ý. Cố gắng nhé!`;
+      playSound('click');
+    }
+
+    const finalEarnings = baseIncome + bonus;
+    gameData.money += finalEarnings;
+    gameData.score += finalEarnings + (targetCount >= activeOrder.minQty ? 50 : 20);
+    gameData.ordersCompleted++;
+
+    // Check level up
+    const nextLevelThreshold = gameData.lastLevelUpScore + (gameData.level * 100);
+    if (gameData.score >= nextLevelThreshold && gameData.level < 50) {
+      gameData.lastLevelUpScore = nextLevelThreshold;
+      gameData.level++;
+      showLevelUp();
+      playSound('levelup');
+    }
+
+    showAchievement(evaluationText);
+    alert(`✨ Bó hoa hoàn thành!\n💰 Doanh thu: ${finalEarnings}đ\n\n${evaluationText}`);
+
+    document.querySelectorAll('.stem-on-bouquet').forEach(el => el.remove());
+    currentBouquet.flowers = [];
+    currentBouquet.card = null;
+
+    updateAllInterfaces();
+    save();
+    changeScreen('screen-dashboard');
+  }
+
+  function showLevelUp() {
+    document.getElementById('levelup-text').innerText = `Bạn đã lên đến Cấp ${gameData.level}!`;
+    document.getElementById('levelup-reward').innerText = `🎁 +${gameData.level * 100} xu & Mở khóa hoa mới!`;
+    changeScreen('screen-levelup');
+  }
+
+  function showAchievement(text) {
+    const popup = document.getElementById('achievement-popup');
+    popup.innerText = text;
+    popup.classList.remove('hidden');
+    setTimeout(() => popup.classList.add('hidden'), 3000);
+  }
+</script>
+
+</body>
+</html>
